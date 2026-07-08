@@ -16,6 +16,7 @@ in
     jq        # json on the command line
     lazygit
     neovim
+    nodejs_22   # node + npm/npx (needed for JS/TS projects like label-platform)
     # the font everything renders in
     nerd-fonts.hack
   ];
