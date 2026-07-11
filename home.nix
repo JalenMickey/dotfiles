@@ -44,7 +44,11 @@ in
       pull = "git pull";
       m = "git switch main";
       cc = "claude --dangerously-skip-permissions";
-      co = "codex --full-auto";
+      co = "codex --sandbox workspace-write --ask-for-approval never";
+      # ^ --full-auto was removed in codex 0.128 (deprecated compat flag warned,
+      #   then dropped). This is the documented like-for-like replacement - NOT
+      #   --dangerously-bypass-approvals-and-sandbox, which removes the sandbox
+      #   entirely rather than just skipping approval prompts.
       oc = "omlx launch opencode --model mlx-community--Qwen3.6-27B-8bit";
       # ^ prefer this over `co` for local-model work: omlx writes real context-window
       #   metadata into opencode's config at launch, instead of Codex's bundled catalog
