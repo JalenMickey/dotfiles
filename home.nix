@@ -1,7 +1,8 @@
-{ config, pkgs, user, ... }:
+{ config, pkgs, lib, user, ... }:
 
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
+  omlxApiKeyFile = "${dotfiles}/home/omlx-api-key.local";
 in
 
 {
@@ -17,11 +18,17 @@ in
     lazygit
     neovim
     nodejs_22   # node + npm/npx (needed for JS/TS projects like label-platform)
+    gh          # needed by firstmate for GitHub auth/PRs
     # the font everything renders in
     nerd-fonts.hack
   ];
   fonts.fontconfig.enable = true;
   home.sessionVariables.EDITOR = "nvim";
+  home.sessionVariables.OMLX_API_KEY =
+    lib.optionalString (builtins.pathExists omlxApiKeyFile) (lib.strings.trim (builtins.readFile omlxApiKeyFile));
+  # ^ local omlx server auth, used by Codex's omlx model_provider. Value lives in home/omlx-api-key.local
+  #   (gitignored, not this public repo) so the real key is never committed.
+  home.sessionPath = [ "${config.home.homeDirectory}/.local/bin" ];  # treehouse, no-mistakes installers drop binaries here
 
   programs.zsh = {
     enable = true;
