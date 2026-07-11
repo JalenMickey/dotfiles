@@ -41,6 +41,10 @@
       "herdr"
       "rust"              # build dep for omlx; kept explicit since omlx has no prebuilt bottle and rebuilds from source on every upgrade
       "jundot/omlx/omlx"  # local MLX inference server (LLM + voice via mlx-audio)
+      "opencode"          # terminal coding agent; used for local-model work via
+                          # `omlx launch opencode`, which writes correct context-window
+                          # metadata for the served model instead of guessing (unlike
+                          # Codex's bundled model catalog, which doesn't know local models)
     ];
     casks = [
       "wezterm"

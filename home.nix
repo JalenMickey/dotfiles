@@ -45,6 +45,10 @@ in
       m = "git switch main";
       cc = "claude --dangerously-skip-permissions";
       co = "codex --full-auto";
+      oc = "omlx launch opencode --model mlx-community--Qwen3.6-27B-8bit";
+      # ^ prefer this over `co` for local-model work: omlx writes real context-window
+      #   metadata into opencode's config at launch, instead of Codex's bundled catalog
+      #   guessing wrong for models it doesn't recognize (see the fallback-metadata warning)
     };
   };
 
