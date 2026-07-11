@@ -50,6 +50,7 @@
       "wezterm"
       "claude-code"
       "codex"           # OpenAI Codex CLI, used as a coding-agent frontend for omlx
+      "copilot-cli"     # GitHub Copilot CLI, coding-agent frontend backed by Copilot subscription
       "opensuperwhisper" # local voice dictation
     ];
   };

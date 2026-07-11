@@ -44,6 +44,10 @@ in
       pull = "git pull";
       m = "git switch main";
       cc = "claude --dangerously-skip-permissions";
+      gc = "copilot --allow-all";
+      # ^ GitHub Copilot CLI's full-autonomy shortcut, equivalent to --allow-all-tools
+      #   --allow-all-paths --allow-all-urls combined. Same risk profile as cc's
+      #   --dangerously-skip-permissions - no confirmation prompts.
       co = "codex --sandbox workspace-write --ask-for-approval never";
       # ^ --full-auto was removed in codex 0.128 (deprecated compat flag warned,
       #   then dropped). This is the documented like-for-like replacement - NOT
