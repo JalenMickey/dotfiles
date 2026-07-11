@@ -49,10 +49,16 @@ in
       #   then dropped). This is the documented like-for-like replacement - NOT
       #   --dangerously-bypass-approvals-and-sandbox, which removes the sandbox
       #   entirely rather than just skipping approval prompts.
-      oc = "omlx launch opencode --model mlx-community--Qwen3.6-27B-8bit";
+      oc = "omlx launch opencode --model mlx-community--Qwen3.6-35B-A3B-8bit";
       # ^ prefer this over `co` for local-model work: omlx writes real context-window
       #   metadata into opencode's config at launch, instead of Codex's bundled catalog
       #   guessing wrong for models it doesn't recognize (see the fallback-metadata warning)
+      # ^ switched default model 2026-07-11: Qwen3.6-35B-A3B (MoE, 3B active) measured
+      #   ~5.6x faster generation than the prior Qwen3.6-27B dense default, for a small
+      #   (1-4 point, worst case ~8 on Terminal-Bench) accuracy dip per Qwen's own
+      #   published benchmarks. 27B weights kept on disk for occasional manual use via
+      #   `omlx launch codex --model mlx-community--Qwen3.6-27B-8bit` when max quality
+      #   matters more than speed.
     };
   };
 
