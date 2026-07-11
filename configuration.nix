@@ -34,12 +34,37 @@
     onActivation.cleanup = "zap";  # remove anything not listed here
     onActivation.autoUpdate = true;
     onActivation.extraFlags = [ "--force" ];
+    taps = [
+      "jundot/omlx"  # private tap, trusted via `brew trust jundot/omlx`
+    ];
     brews = [
       "herdr"
+      "rust"              # build dep for omlx; kept explicit since omlx has no prebuilt bottle and rebuilds from source on every upgrade
+      "jundot/omlx/omlx"  # local MLX inference server (LLM + voice via mlx-audio)
     ];
     casks = [
       "wezterm"
       "claude-code"
+      "codex"           # OpenAI Codex CLI, used as a coding-agent frontend for omlx
+      "opensuperwhisper" # local voice dictation
     ];
+  };
+
+  # Raise the Metal/GPU wired-memory ceiling to match omlx's own internal target
+  # (see ~/.omlx/settings.json process_memory_enforcer, which expects 122GB).
+  # Without this, the kernel default silently resets on every reboot, so omlx
+  # falls back to a lower cap than it's configured for and can hard-panic
+  # instead of gracefully rejecting oversized requests.
+  #
+  # A plain `system.activationScripts` entry was considered but skipped: nix-darwin
+  # has a known issue where activation scripts don't reliably re-run from
+  # org.nixos.activate-system after reboot (only on `darwin-rebuild switch`).
+  # A dedicated LaunchDaemon with RunAtLoad is loaded directly by launchd at
+  # boot, independent of that daemon, so it's the more reliable path here.
+  launchd.daemons."omlx-gpu-memory" = {
+    serviceConfig = {
+      ProgramArguments = [ "/usr/sbin/sysctl" "-w" "iogpu.wired_limit_mb=124928" ];
+      RunAtLoad = true;
+    };
   };
 }
