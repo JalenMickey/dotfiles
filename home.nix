@@ -19,6 +19,7 @@ in
     neovim
     nodejs_22   # node + npm/npx (needed for JS/TS projects like label-platform)
     gh          # needed by firstmate for GitHub auth/PRs
+    glow        # render markdown in the terminal; also backs glow.nvim's <leader>m preview
     # the font everything renders in
     nerd-fonts.hack
   ];
@@ -36,6 +37,26 @@ in
     syntaxHighlighting.enable = true;  # commands turn green when valid
     initContent = ''
       bindkey '^f' autosuggest-accept
+
+      # Delete orphaned nvim swap files. nvim holds its .swp open for the whole
+      # session, so a swap that no process has open (per lsof) belongs to a dead
+      # session and is safe to remove; live ones are skipped. Clears the E325
+      # "swap file already exists" prompts left behind by crashed sessions.
+      nvim-swapclean() {
+        local dir="''${XDG_STATE_HOME:-$HOME/.local/state}/nvim/swap"
+        [ -d "$dir" ] || { echo "no swap dir: $dir"; return 0; }
+        local removed=0 inuse=0 f
+        for f in "$dir"/*.swp(N); do
+          if lsof -- "$f" >/dev/null 2>&1; then
+            echo "in use, skipping: ''${f:t}"
+            inuse=$((inuse + 1))
+          elif rm -f -- "$f"; then
+            echo "removed: ''${f:t}"
+            removed=$((removed + 1))
+          fi
+        done
+        echo "nvim-swapclean: $removed removed, $inuse in use"
+      }
     '';
     shellAliases = {
       ".." = "cd ..";
@@ -53,6 +74,12 @@ in
       #   then dropped). This is the documented like-for-like replacement - NOT
       #   --dangerously-bypass-approvals-and-sandbox, which removes the sandbox
       #   entirely rather than just skipping approval prompts.
+      # ^ codex's default model lives in ~/.codex/config.toml, not here. Switched
+      #   2026-07-12 from Qwen3.6-35B-A3B-8bit to mlx-community/Qwen3-Coder-Next-8bit
+      #   (80B total, 3B active MoE) - newer architecture, longer native context
+      #   (256K vs 32K-128K), and still only ~3B active params so generation speed
+      #   stays close to the old 35B-A3B default despite the larger total size.
+      #   128GB unified memory comfortably fits the 8bit quant (~85GB weights).
       oc = "omlx launch opencode --model mlx-community--Qwen3.6-35B-A3B-8bit";
       # ^ prefer this over `co` for local-model work: omlx writes real context-window
       #   metadata into opencode's config at launch, instead of Codex's bundled catalog

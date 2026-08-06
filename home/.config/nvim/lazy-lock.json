@@ -1,8 +1,12 @@
 {
   "diffview.nvim": { "branch": "main", "commit": "4516612fe98ff56ae0415a259ff6361a89419b0a" },
   "gitsigns.nvim": { "branch": "main", "commit": "eb60cc7b94c46005237fd34170d76f3a089a90aa" },
+  "glow.nvim": { "branch": "main", "commit": "5d5954b2f22e109d4a6eba8b2618c5b96e4ee7a2" },
   "lazy.nvim": { "branch": "main", "commit": "306a05526ada86a7b30af95c5cc81ffba93fef97" },
+  "leetcode.nvim": { "branch": "master", "commit": "4e8b3683940a8377379ce9398e7f329e3560b42c" },
   "neogit": { "branch": "master", "commit": "6fc2fa890bd2031ed999c074daab0fb4feff20a5" },
+  "nui.nvim": { "branch": "main", "commit": "de740991c12411b663994b2860f1a4fd0937c130" },
+  "nvim-treesitter": { "branch": "main", "commit": "4916d6592ede8c07973490d9322f187e07dfefac" },
   "oil.nvim": { "branch": "master", "commit": "b73018b75affd13fa38e2fc94ef753b465f770d7" },
   "plenary.nvim": { "branch": "master", "commit": "74b06c6c75e4eeb3108ec01852001636d85a932b" },
   "rose-pine": { "branch": "main", "commit": "ff483051a47e27d84bdef47703538df1ed9f4a47" },
