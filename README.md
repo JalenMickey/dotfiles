@@ -79,6 +79,19 @@ Edit the config files in place, then apply:
 That's it.
 No separate build-and-copy step.
 
+## Manual tools after bootstrap
+
+A few tools in my workflow live outside this Nix config and are cloned by hand on a fresh machine. `bootstrap.sh` does not fetch them, so re-clone them after the first rebuild:
+
+```sh
+# firstmate - Kun's captain/crew orchestrator (no app to install; the repo IS the tool)
+mkdir -p ~/github/kunchenguid
+git clone https://github.com/kunchenguid/firstmate ~/github/kunchenguid/firstmate
+# use it by launching an agent inside that dir; keep current with /updatefirstmate
+```
+
+The full rationale for these (and everything else in the setup) is in [`docs/agentic-workflow.md`](docs/agentic-workflow.md).
+
 ## Make it yours
 
 This repo is mine.
