@@ -94,7 +94,7 @@ Protocol: HTTPS via `gh auth login`, not SSH — background daemons (no-mistakes
 | quota-axi | done | usage tracking across Claude/Codex/Cursor/Copilot/Grok |
 | treehouse | done | pooled git worktrees, ~/.local/bin/treehouse |
 | no-mistakes | done | validation pipeline, daemon running |
-| gnhf | done | via `npx gnhf` (no global install — see §9) |
+| gnhf | done | "good night, have fun" — the unattended overnight autonomous loop. Via `npx gnhf` (no global install — see §9) |
 | firstmate | done | cloned to `~/github/kunchenguid/firstmate`; fresh-machine re-clone step now documented in the dotfiles README |
 | gh (GitHub CLI) | done | authenticated, HTTPS protocol |
 | omlx | done | v0.5.0. GPU memory ceiling + context-window policy hardened 2026-07-10 — see §5 |
