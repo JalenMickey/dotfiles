@@ -92,6 +92,20 @@ git clone https://github.com/kunchenguid/firstmate ~/github/kunchenguid/firstmat
 
 The full rationale for these (and everything else in the setup) is in [`docs/agentic-workflow.md`](docs/agentic-workflow.md).
 
+## Windows / WSL2 (experimental)
+
+This repo targets macOS, but the environment can be rebuilt on Windows via WSL2.
+The Unix-shaped majority ports cleanly; two pieces get swapped - nix-darwin
+becomes standalone home-manager (`home-linux.nix`), and Apple-Silicon local
+inference (omlx/MLX) becomes Ollama. From a clone inside WSL2:
+
+```sh
+./wsl-bootstrap.sh
+```
+
+See [`docs/windows-wsl2.md`](docs/windows-wsl2.md) for the full tier-by-tier
+breakdown, the local-inference hardware caveat, and the manual steps.
+
 ## Make it yours
 
 This repo is mine.

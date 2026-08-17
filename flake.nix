@@ -35,5 +35,15 @@
           }
         ];
       };
+
+      # Windows/WSL2 target (see docs/windows-wsl2.md). Standalone home-manager,
+      # no nix-darwin. Applied by wsl-bootstrap.sh via
+      #   home-manager switch --flake ~/.dotfiles#jalenmickey
+      # This output is additive - it does not affect the darwin ".#mac" build.
+      homeConfigurations."${user}" = home-manager.lib.homeManagerConfiguration {
+        # WSL2 on x86_64 Windows. Use "aarch64-linux" on ARM (Snapdragon) Windows.
+        pkgs = nixpkgs.legacyPackages."x86_64-linux";
+        modules = [ ./home-linux.nix ];
+      };
     };
 }
