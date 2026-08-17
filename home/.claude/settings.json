@@ -6,5 +6,8 @@
   },
   "effortLevel": "medium",
   "skipDangerousModePermissionPrompt": true,
-  "theme": "dark-ansi"
+  "theme": "dark-ansi",
+  "enabledPlugins": {
+    "vercel@claude-plugins-official": true
+  }
 }
