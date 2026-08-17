@@ -1,8 +1,8 @@
 # Agentic Workflow — Complete Reference
 
-Last updated: 2026-07-12 · Living document — edit this directly for day-to-day changes. `agentic-workflow.pdf` is a periodic polished snapshot generated from this file's content; only worth regenerating after a batch of real changes, not every edit.
+Last updated: 2026-08-16 · Living document, edit this directly for day-to-day changes. As of 2026-08-16 this reference is version-controlled at `docs/agentic-workflow.md` inside the `dotfiles` repo (it previously sat loose in the untracked parent folder), so it clones to a fresh machine with the rest of the setup. `agentic-workflow.pdf` is a periodic polished snapshot generated from this file's content; only worth regenerating after a batch of real changes, not every edit.
 
-> **Current state:** fully built and verified working. WezTerm + herdr + Neovim + Claude Code + Codex + OpenCode, all wired to local (`omlx`) and cloud (Claude) inference, voice input via Parakeet v3, the full axi tool family, and Kun's productivity stack (lavish, treehouse, no-mistakes, gnhf, firstmate) are all installed, declared in Nix, and tested end-to-end. GitHub Copilot CLI (`gc`) was added 2026-07-11 — installed and declared, authentication still pending, see §2. Codex's default local model swapped again 2026-07-12, to `mlx-community--Qwen3-Coder-Next-8bit` — see §5. That session also uncovered and fixed a real bug in `rebuild.sh` (missing `--impure`) that had been silently zeroing out `OMLX_API_KEY` on every rebuild — see §9.
+> **Current state:** fully built and verified working. WezTerm + herdr + Neovim + Claude Code + Codex + OpenCode, all wired to local (`omlx`) and cloud (Claude) inference, voice input via Parakeet v3, the full axi tool family, and Kun's productivity stack (lavish, treehouse, no-mistakes, gnhf, firstmate) are all installed, declared in Nix, and tested end-to-end. GitHub Copilot CLI (`gc`) was added 2026-07-11 and authenticated 2026-08-16, now verified working end-to-end, see §2. Codex's default local model swapped again 2026-07-12, to `mlx-community--Qwen3-Coder-Next-8bit` — see §5. That session also uncovered and fixed a real bug in `rebuild.sh` (missing `--impure`) that had been silently zeroing out `OMLX_API_KEY` on every rebuild — see §9.
 
 ---
 
@@ -50,7 +50,7 @@ Sessions persist on a background herdr server — closing the terminal doesn't k
 | `cc` | `claude --dangerously-skip-permissions` (cloud) |
 | `co` | `codex --sandbox workspace-write --ask-for-approval never` (routed to local `omlx`, default model `mlx-community--Qwen3-Coder-Next-8bit` as of 2026-07-12 — see §5) |
 | `oc` | `omlx launch opencode --model mlx-community--Qwen3.6-35B-A3B-8bit` (routed to local `omlx`). Still on the older default — not yet swapped to Qwen3-Coder-Next, see §5. Prefer this over `co` for context-heavy work regardless. |
-| `gc` | `copilot --allow-all` (cloud, GitHub Copilot subscription). Added 2026-07-11 — run `copilot login` once before first use, see §2. |
+| `gc` | `copilot --allow-all` (cloud, GitHub Copilot subscription). Added 2026-07-11, authenticated 2026-08-16 and working, see §2. |
 
 `/` — slash commands (skills, config, `/lavish`, `/no-mistakes`). Plan mode — ask the agent to plan before building. `Esc` — interrupt agent mid-task.
 
@@ -95,13 +95,13 @@ Protocol: HTTPS via `gh auth login`, not SSH — background daemons (no-mistakes
 | treehouse | done | pooled git worktrees, ~/.local/bin/treehouse |
 | no-mistakes | done | validation pipeline, daemon running |
 | gnhf | done | via `npx gnhf` (no global install — see §9) |
-| firstmate | done | cloned to ~/github/kunchenguid/firstmate |
+| firstmate | done | cloned to `~/github/kunchenguid/firstmate`; fresh-machine re-clone step now documented in the dotfiles README |
 | gh (GitHub CLI) | done | authenticated, HTTPS protocol |
 | omlx | done | v0.5.0. GPU memory ceiling + context-window policy hardened 2026-07-10 — see §5 |
 | Codex CLI → omlx | done | wired to omlx, verified via `codex exec`. Bundled model catalog doesn't recognize local models — cosmetic metadata warning only, see §5 |
 | OpenCode (oc) → omlx | done | wired via `omlx launch opencode`; preferred over Codex for context-heavy sessions since omlx writes real metadata into its config — see §5 |
 | Claude Code → omlx | decided | deliberately cloud-only — not wired, by choice |
-| GitHub Copilot CLI (`gc`) | pending | cask `copilot-cli` declared in `configuration.nix`, alias in `home.nix`, installed via `./rebuild.sh` 2026-07-11. Not yet authenticated — run `copilot login` before first use. Cloud-only for now; it does support BYOK to an OpenAI-compatible endpoint via `COPILOT_PROVIDER_BASE_URL` (`copilot help providers`), so wiring it to `omlx` like `co`/`oc` is possible but not yet attempted — see §5. No global instructions file (no `~/.copilot/AGENTS.md` equivalent) — see §3. |
+| GitHub Copilot CLI (`gc`) | done | cask `copilot-cli` declared in `configuration.nix`, alias in `home.nix`, installed via `./rebuild.sh` 2026-07-11. Authenticated via `copilot login` and verified working end-to-end 2026-08-16. Cloud-only for now; it does support BYOK to an OpenAI-compatible endpoint via `COPILOT_PROVIDER_BASE_URL` (`copilot help providers`), so wiring it to `omlx` like `co`/`oc` is possible but not yet attempted — see §5. No global instructions file (no `~/.copilot/AGENTS.md` equivalent) — see §3. |
 | Markdown preview (`glow` + `glow.nvim`, `Space m`) | pending | `glow` added to `home.packages` in `home.nix` 2026-07-11; `glow.nvim` added as new `lua/plugins/markdown.lua`, lazy-loaded on first `:Glow` call. Declared, not yet applied - run `./rebuild.sh` to install `glow`, then launch `nvim` once so lazy.nvim fetches the plugin. |
 | leetcode.nvim (`:Leet`) | done | `kawre/leetcode.nvim` added as `lua/plugins/leetcode.lua` 2026-07-11 — no Nix/`rebuild.sh` involved, this repo's Neovim plugins are managed entirely by `lazy.nvim` (installs from GitHub on next `nvim` launch). `lang = 'python3'`, `plugins.non_standalone = true` so `:Leet` works inside a normal session with other buffers open — close it with `:Leet exit`, not `:q`. Sign-in needs the full `Cookie` request header (`csrftoken` + `LEETCODE_SESSION`) copied from DevTools Network tab, not `Set-Cookie` — see §9 gotchas for the paste/Brave quirks. |
 | OpenSuperWhisper + Parakeet v3 | done | installed, permissions granted, verified pasting text |
