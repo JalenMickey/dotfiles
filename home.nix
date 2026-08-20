@@ -80,11 +80,22 @@ in
       #   (256K vs 32K-128K), and still only ~3B active params so generation speed
       #   stays close to the old 35B-A3B default despite the larger total size.
       #   128GB unified memory comfortably fits the 8bit quant (~85GB weights).
-      oc = "omlx launch opencode --model mlx-community--Qwen3.6-35B-A3B-8bit";
+      oc = "omlx launch opencode --model mlx-community--Qwen3-Coder-Next-8bit";
       # ^ prefer this over `co` for local-model work: omlx writes real context-window
       #   metadata into opencode's config at launch, instead of Codex's bundled catalog
       #   guessing wrong for models it doesn't recognize (see the fallback-metadata warning)
-      # ^ switched default model 2026-07-11: Qwen3.6-35B-A3B (MoE, 3B active) measured
+      # ^ switched to the Coder model 2026-08-17, matching `co`. Qwen3.6-35B-A3B is a
+      #   REASONING model: it spends its output budget in a <think> stream and never
+      #   lands a clean tool call, which is what caused the gnhf/oc "produced no final
+      #   answer" failures (see docs/agentic-workflow.md gotchas). Reasoning models are
+      #   fine for chat, wrong for agentic tool-calling loops.
+      # ^ this alias is not just a per-invocation choice: `omlx launch` WRITES the model
+      #   into ~/.config/opencode/opencode.json, and the omlx service appears to sync its
+      #   last-launched model back into that file on start. So a stale model here silently
+      #   becomes the default for every opencode consumer, including firstmate crewmates
+      #   that spawn `opencode` directly and never touch this alias.
+      # ^ superseded rationale, kept for history: default model 2026-07-11 was
+      #   Qwen3.6-35B-A3B (MoE, 3B active), which measured
       #   ~5.6x faster generation than the prior Qwen3.6-27B dense default, for a small
       #   (1-4 point, worst case ~8 on Terminal-Bench) accuracy dip per Qwen's own
       #   published benchmarks. 27B weights kept on disk for occasional manual use via
