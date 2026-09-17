@@ -20,6 +20,7 @@ in
     nodejs_22   # node + npm/npx (needed for JS/TS projects like label-platform)
     gh          # needed by firstmate for GitHub auth/PRs
     glow        # render markdown in the terminal; also backs glow.nvim's <leader>m preview
+    python3Packages.huggingface-hub  # provides the `hf` CLI used to pull MLX weights into ~/.omlx/models
     # the font everything renders in
     nerd-fonts.hack
   ];
@@ -98,9 +99,44 @@ in
       #   Qwen3.6-35B-A3B (MoE, 3B active), which measured
       #   ~5.6x faster generation than the prior Qwen3.6-27B dense default, for a small
       #   (1-4 point, worst case ~8 on Terminal-Bench) accuracy dip per Qwen's own
-      #   published benchmarks. 27B weights kept on disk for occasional manual use via
-      #   `omlx launch codex --model mlx-community--Qwen3.6-27B-8bit` when max quality
-      #   matters more than speed.
+      #   published benchmarks.
+      # ^ 2026-09-17: Qwen3.6-27B-8bit and Qwen3.6-35B-A3B-8bit weights were DELETED
+      #   (63GB reclaimed). Nothing references those model ids anymore - if you see one
+      #   in a config, it is stale.
+
+      ou = "omlx launch opencode --model Qwen3.8-27B-Uncensored-8bit";
+      # ^ deep reasoning + refusal bypass, added 2026-09-17. Reach for it when a problem
+      #   needs careful thought rather than speed, or when guardrails block legitimate
+      #   work. NOT the coding driver - `oc` (Qwen3-Coder-Next-8bit) stays that.
+      # ^ Expect ~18 tok/s vs `oc`'s ~78 (measured, see docs §5a). It is a DENSE 27B, so
+      #   all 27B params are read per token and it is bandwidth-bound at ~20.8 tok/s on
+      #   this machine; `oc` is an MoE activating only ~3B. The 4.3x gap is the price of
+      #   this slot, and the reason it is not the default.
+      # ^ Chosen over DeepSeek V4 Flash abliterated (91GB, ds4 engine) because it ties
+      #   V4 Flash on the Artificial Analysis Intelligence Index (52 vs 52) at ~27.5GB
+      #   instead of ~91GB, runs on MLX/omlx so this stack keeps working, and takes no
+      #   Q2 quantization damage. V4 Flash wins agentic coding on paper (DeepSWE 54.4
+      #   vs 42.2) but only at full precision - the 128GB-viable build is Q2 AND
+      #   abliterated, which degrades exactly that advantage. Independently moot: omlx
+      #   bundles mlx_lm, which ships deepseek_v2/v3/v32 but NO v4 (upstream mlx-lm
+      #   issue #1281 is open), so no DeepSeek V4 MLX quant will load here at all.
+      # ^ multimodal: this build carries preprocessor/video_preprocessor configs, so it
+      #   takes image and video input. It is served through omlx's VLM path, which does
+      #   NOT stream incrementally - the whole response arrives in one SSE chunk. Matters
+      #   only for benchmarking (see docs §5a), not for interactive use.
+      # ^ NO non-abliterated counterpart is installed. `mlx-community/Qwen3.8-27B-8bit`
+      #   (29.5GB) was specced as a clean control for judging whether abliteration had
+      #   degraded something, then deliberately deferred 2026-09-17 - the next model
+      #   downloaded becomes the daily driver instead. Until then there is nothing on
+      #   this machine to A/B against, so treat odd behaviour from `ou` as unattributed:
+      #   it could be abliteration damage or just the model.
+      # ^ model id is the DIRECTORY NAME under ~/.omlx/models, not an HF repo id.
+      #   `omlx serve` discovers each subdir containing config.json + *.safetensors and
+      #   names the model after the folder - hence no `mlx-community--` prefix, unlike
+      #   `oc` above, which resolves from the HF cache.
+      # ^ same launch-writes-config caveat as `oc`: this WRITES the model into
+      #   ~/.config/opencode/opencode.json and becomes the default for every opencode
+      #   consumer until something else overwrites it. Re-run `oc` to switch back.
     };
   };
 

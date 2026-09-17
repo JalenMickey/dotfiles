@@ -49,7 +49,8 @@ Sessions persist on a background herdr server — closing the terminal doesn't k
 |---|---|
 | `cc` | `claude --dangerously-skip-permissions` (cloud) |
 | `co` | `codex --sandbox workspace-write --ask-for-approval never` (routed to local `omlx`, default model `mlx-community--Qwen3-Coder-Next-8bit` as of 2026-07-12 — see §5) |
-| `oc` | `omlx launch opencode --model mlx-community--Qwen3.6-35B-A3B-8bit` (routed to local `omlx`). Still on the older default — not yet swapped to Qwen3-Coder-Next, see §5. Prefer this over `co` for context-heavy work regardless. |
+| `oc` | `omlx launch opencode --model mlx-community--Qwen3-Coder-Next-8bit` (routed to local `omlx`). Swapped off Qwen3.6-35B-A3B on 2026-08-17 to match `co`, see §5. Prefer this over `co` for context-heavy work. |
+| `ou` | `omlx launch opencode --model Qwen3.8-27B-Uncensored-8bit` — deep reasoning + refusal bypass, ~18 tok/s, see §5a |
 | `gc` | `copilot --allow-all` (cloud, GitHub Copilot subscription). Added 2026-07-11, authenticated 2026-08-16 and working, see §2. |
 
 `/` — slash commands (skills, config, `/lavish`, `/no-mistakes`). Plan mode — ask the agent to plan before building. `Esc` — interrupt agent mid-task.
@@ -147,7 +148,7 @@ omlx is an MLX inference server purpose-built for coding agents on Apple Silicon
 - Installed via private Homebrew tap `jundot/omlx`, trusted and declared in `configuration.nix`
 - Running as a background service (`homebrew.mxcl.omlx` launchd job), auto-starts at login
 - **Codex's default model as of 2026-07-12: `mlx-community--Qwen3-Coder-Next-8bit`** (80B total / 3B active MoE, 256K native context). Replaced `mlx-community--Qwen3.6-35B-A3B-8bit` — see "Model swap: → Qwen3-Coder-Next-8bit" below for rationale.
-- `oc`/OpenCode is still on `mlx-community--Qwen3.6-35B-A3B-8bit` — not yet swapped, since that alias hardcodes its model in `home.nix` rather than reading `~/.codex/config.toml`. Revisit if Qwen3-Coder-Next proves out well through Codex.
+- `oc`/OpenCode was swapped to `mlx-community--Qwen3-Coder-Next-8bit` on 2026-08-17, matching `co`. That alias hardcodes its model in `home.nix` rather than reading `~/.codex/config.toml`, so it needed a deliberate edit plus a rebuild.
 - Codex CLI is wired to it (`~/.codex/config.toml`, provider `omlx`, base_url `http://127.0.0.1:8000/v1`) — verified working end-to-end via `codex exec`
 - OpenCode is also wired to it via `omlx launch opencode --model <id>` (the `oc` alias) — preferred over Codex for context-heavy work, since omlx writes its real, live context-window metadata into OpenCode's config at launch time instead of Codex guessing from a static bundled catalog
 - Claude Code stays cloud-only — a deliberate choice, not a gap.
@@ -187,8 +188,9 @@ The dense model wins every benchmark, but mostly by 1-4 points; Terminal-Bench (
 
 **Fallback:** the old 27B weights are kept on disk (not deleted). For the rare task where you want max quality over speed:
 ```sh
-omlx launch codex --model mlx-community--Qwen3.6-27B-8bit
+omlx launch codex --model mlx-community--Qwen3.6-27B-8bit   # DELETED 2026-09-17 - do not run, see §5a
 ```
+> No non-abliterated fallback is installed. For max quality over speed, `ou` → `omlx launch opencode --model Qwen3.8-27B-Uncensored-8bit` (~18 tok/s), noting it is abliterated.
 
 ### Model swap: Qwen3.6-35B-A3B-8bit → Qwen3-Coder-Next-8bit (2026-07-12, Codex only)
 
@@ -211,9 +213,56 @@ Takeaways: Coder-Next is slower per-token than 35B-A3B raw (~74-79 tok/s vs ~88-
 
 > **Caveat — don't benchmark back-to-back with other heavy loads:** the first `codex exec` attempt this session measured **4:12** (vs the clean 9.0s above). Cause: two `mlx_lm.benchmark` runs (each memory-mapping ~85-87GB of weights) had just run immediately before it, evicting Coder-Next's pages from the page cache and forcing a slow cold reload under memory contention when the server needed them. Not a model or config problem — an artifact of testing methodology. Let large local-model loads settle before timing the next one.
 
-Only `co`/Codex was switched — `oc`/OpenCode's model is hardcoded in the `home.nix` alias (not read from `config.toml`), so it's still on `Qwen3.6-35B-A3B-8bit` until deliberately changed.
+Only `co`/Codex was switched — `oc`/OpenCode's model is hardcoded in the `home.nix` alias (not read from `config.toml`), so it's still on `Qwen3.6-35B-A3B-8bit` until deliberately changed. *(Superseded 2026-08-17: `oc` was swapped to `Qwen3-Coder-Next-8bit` to match `co`.)*
 
-**Fallback:** both older models (`Qwen3.6-35B-A3B-8bit`, `Qwen3.6-27B-8bit`) are kept on disk, same as always — swap the `model` line in `~/.codex/config.toml` back if needed, no rebuild required (that file isn't Nix-managed).
+**Fallback:** ~~both older models (`Qwen3.6-35B-A3B-8bit`, `Qwen3.6-27B-8bit`) are kept on disk, same as always — swap the `model` line in `~/.codex/config.toml` back if needed, no rebuild required (that file isn't Nix-managed).~~
+
+> **No longer true as of 2026-09-17.** Both Qwen3.6 fallbacks were **deleted** (63GB reclaimed), along with two never-completed stub downloads. Do not point `~/.codex/config.toml` at `Qwen3.6-35B-A3B-8bit` or `Qwen3.6-27B-8bit` — those weights are gone and the server will fail to load them. There is currently **no** non-abliterated fallback installed; `ou` (`Qwen3.8-27B-Uncensored-8bit`) covers deep reasoning, and the next model downloaded is slated to become the new daily driver. See §5a.
+
+### §5a — Model lineup rework: two slots (2026-09-17)
+
+Consolidated from five cached models (142GB) to two deliberate slots (~107GB). Deleted `Qwen3.6-27B-8bit` (28G), `Qwen3.6-35B-A3B-8bit` (35G), and two stub directories that had never finished downloading (`Qwen3.6-40B-…-Deckard-Heretic-…`, `Qwen3.6-27B-nvfp4`). Net 63GB reclaimed.
+
+| Alias | Model | Size | Role |
+|---|---|---|---|
+| `oc` | `mlx-community--Qwen3-Coder-Next-8bit` | 79GB | Daily driver: agentic coding (unchanged) |
+| `ou` | `Qwen3.8-27B-Uncensored-8bit` | 27.5GB | Deep reasoning + refusal bypass |
+
+**A third slot was specced and deliberately deferred.** `mlx-community/Qwen3.8-27B-8bit` (29.5GB) was going to be the max-quality non-abliterated reference, replacing the deleted Qwen3.6-27B in that role. It was dropped on 2026-09-17 in favour of waiting: the *next* model downloaded becomes the new daily driver instead. Two consequences worth knowing:
+
+- There is **no non-abliterated counterpart** on this machine. `ou` was meant to be A/B'd against the clean base build of the same model — both derive from `Qwen/Qwen3.8-27B`, so comparing them would have isolated abliteration from model choice. Without it, odd behaviour from `ou` is unattributed: could be abliteration damage, could just be the model.
+- `oc` remains the daily driver until that next download lands.
+
+**Why a 27B at all, rather than something larger.** On 128GB every bigger model forces a 2-bit quant, which costs more capability than the extra parameters buy back. GLM-5.3 (max) needs 217GB for its smallest build; GLM-5.3-Flash fits only at `2bit-lite` (+141% perplexity, 77.19% top-1 agreement); Qwen3.8-Flash-Next is 163GB in MLX 4-bit; Kimi K3's smallest real quant is 567GB; MiniMax M3 needs ~118GB at IQ2_XXS. Qwen3.8's open lineup has no mid-tier — 27B dense, then 180B Flash-Next, then 2.4T-A95B. Qwen3.8-27B scores 52 on the Artificial Analysis Intelligence Index, tying DeepSeek V4 Flash at roughly a tenth of the memory and taking no quantization damage to get there.
+
+**Why not DeepSeek V4 Flash.** Rejected twice over. First on merit: the 128GB-viable build is ~91GB at Q2 *and* abliterated — two stacked degradations hitting exactly the reasoning and long-context robustness that justified reaching for it. Then on hard feasibility: omlx bundles `mlx_lm`, whose `models/` directory ships `deepseek.py`, `deepseek_v2.py`, `deepseek_v3.py`, `deepseek_v32.py` and **no v4** — upstream [mlx-lm issue #1281](https://github.com/ml-explore/mlx-lm/issues/1281) is open, because V4 introduces Compressed Sparse Attention and Heavily Compressed Attention that need new implementation work. The `mlx-community/DeepSeek-V4-Flash-*` quants on HuggingFace are publishable files with no runtime on this stack. (`dflash_mlx` in site-packages is *DFlash speculative decoding*, not DeepSeek Flash — easy to misread.) Running V4 Flash at all requires antirez's ds4, a separate non-MLX engine outside omlx entirely, whose `ds4-server` also defaults to `127.0.0.1:8000` and would collide with omlx.
+
+**No upgrade exists for `oc` either.** There is no Qwen3.8-Coder; Qwen3-Coder-Next (Feb 2026) is still the current coder model, and the newer Qwen3.8-Flash-Next is a general model that doesn't fit at 163GB in MLX.
+
+**Model id resolution differs between the two aliases** — worth remembering when adding the next one:
+
+- `oc` uses `mlx-community--Qwen3-Coder-Next-8bit`: resolved from the HF cache, repo id with `/` → `--`.
+- `ou` uses `Qwen3.8-27B-Uncensored-8bit`: a **directory name** under `~/.omlx/models`. `omlx serve` discovers each subdirectory containing `config.json` + `*.safetensors` and names the model after the folder. The orcarouter repo ships quants in `8-bit/` etc. subfolders, so the download must be flattened into a single model directory or omlx won't see a valid model. Also note `omlx` only rescans at startup — after adding weights, `omlx restart` or the server keeps serving its old list (including models you have since deleted).
+
+`hf` (`python3Packages.huggingface-hub`) is now declared in `home.nix` rather than relying on omlx's bundled copy at `/opt/homebrew/Cellar/omlx/<version>/libexec/bin/hf`.
+
+**Both aliases launch OpenCode, not Codex** — including `ou`, even though the Qwen3.6-27B fallback that once filled a similar role used `omlx launch codex`. Reason: the §5 guidance below — prefer OpenCode for context-heavy work, since Codex fabricates its context-window metadata. Deep reasoning is the context-heavy case.
+
+#### Measured throughput (2026-09-17, M5 Max 128GB)
+
+Run `./docs/bench-models.sh` to reproduce. Numbers are end-to-end (output tokens / wall clock), cold MLX load excluded via a warmup request:
+
+| Model | short prompt | ~3k prompt | bandwidth ceiling |
+|---|---|---|---|
+| `Qwen3-Coder-Next-8bit` (MoE, ~3B active) | **78.1 tok/s** | **71.8 tok/s** | ~186 tok/s |
+| `Qwen3.8-27B-Uncensored-8bit` (dense, 27B active) | **18.0 tok/s** | **17.1 tok/s** | ~20.8 tok/s |
+
+**Coder-Next is ~4.3x faster.** It is 2.7x larger on disk (79GB vs 29.5GB) but activates only ~3B params per token, while the dense 27B reads all 27B. Generation speed tracks *active* params against memory bandwidth, not total size. The dense figure sits just under its 20.8 tok/s ceiling (29.5GB ÷ 614GB/s), confirming it is bandwidth-bound — and it lines up with the ~16.8 tok/s the old dense Qwen3.6-27B measured in §5. Both models pass the reply-exactly-OK diagnostic, so neither will reproduce the "produced no final answer" failure.
+
+Two measurement gotchas the script now guards against, both discovered building it:
+
+1. **Short generations are unmeasurable.** omlx packs several tokens into one SSE chunk. At ~30 output tokens the decode span is mostly buffering jitter, which produced a nonsensical 171 tok/s for a model whose hard ceiling is 20.8. Tests now force 512-token outputs, and any decode figure above the bandwidth ceiling is flagged as an artifact rather than printed as fact.
+2. **The VLM serving path does not stream incrementally.** Qwen3.8-27B is a vision model, and omlx returns its entire response in a single SSE chunk — TTFT equals wall clock. Prefill and decode cannot be separated there at all, so the script reports `n/a` and says why. Coder-Next streams normally. This is why end-to-end tok/s is the headline metric: it is the only one comparable across both paths.
 
 ### Codex's fabricated context-window metadata (investigated, not fixed — by design)
 

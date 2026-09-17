@@ -52,6 +52,14 @@
       "codex"           # OpenAI Codex CLI, used as a coding-agent frontend for omlx
       "copilot-cli"     # GitHub Copilot CLI, coding-agent frontend backed by Copilot subscription
       "opensuperwhisper" # local voice dictation
+      # ^ Ollama was briefly declared here on 2026-09-17, then REMOVED the same day
+      #   along with the app and its ~32GB of GGUF weights. It was a manual install
+      #   (never brew-managed) running a second inference server on :11434 at login,
+      #   holding qwen2.5-coder:7b and qwen3.6:27b-q8_0 - the latter a GGUF duplicate
+      #   of the MLX Qwen3.6-27B deleted the same day. Nothing in the agent stack
+      #   routed to it: `oc` and `ou` both go through omlx on :8000. If it is ever
+      #   reinstalled, the cask token is `ollama-app`, NOT `ollama` (that is the
+      #   CLI-only formula, which does not provide the GUI app).
     ];
   };
 
